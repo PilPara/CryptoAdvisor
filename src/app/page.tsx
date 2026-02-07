@@ -1,4 +1,10 @@
-export default function HomePage() {
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+
+export default async function HomePage() {
+  const { userId } = await auth();
+  if (userId) redirect("/dashboard");
+
   return (
     <div className="p-8 text-center">
       <h1 className="text-3xl font-bold ">AI Crypto Advisor</h1>
