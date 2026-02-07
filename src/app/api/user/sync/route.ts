@@ -1,3 +1,4 @@
+import { users } from "@/db/schema";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
@@ -8,4 +9,6 @@ export async function POST() {
   if (!userId) return NextResponse.json({}, { status: 401 });
 
   const existing = await db.select().from(users);
+
+  return NextResponse.json(existing);
 }
