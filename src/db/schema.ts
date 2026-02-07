@@ -5,3 +5,14 @@ export const users = pgTable("users", {
   clerkId: text("clerk_id").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const prefernces = pgTable("preferences", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
+  assets: text("assets").array().notNull(),
+  investorType: text("investor_type").notNull(),
+  contentTypes: text("content_types").array().notNull(),
+});
