@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Card,
   CardContent,
@@ -26,45 +26,41 @@ function preloadImage(url: string): Promise<void> {
 }
 
 export function CryptoMeme() {
-  const [memes, setMemes] = useState<Meme[]>([]);
+  const memesRef = useRef<Meme[]>([]);
   const [meme, setMeme] = useState<Meme | null>(null);
-  const [loadingMeme, setLoadingMeme] = useState(false);
+  const [loadingMeme, setLoadingMeme] = useState(true);
 
-  const pickRandom = useCallback(
-    async (list: Meme[]) => {
-      const pool = list.length > 0 ? list : memes;
-      if (pool.length === 0) return;
+  async function showRandom(pool?: Meme[]) {
+    const list = pool ?? memesRef.current;
+    if (list.length === 0) return;
 
-      setLoadingMeme(true);
-      const idx = Math.floor(Math.random() * pool.length);
-      const next = pool[idx];
+    setLoadingMeme(true);
+    const idx = Math.floor(Math.random() * list.length);
+    const next = list[idx];
 
-      if (next.url) {
-        try {
-          await preloadImage(next.url);
-        } catch {
-          // image failed to load, still show the title
-        }
+    if (next.url) {
+      try {
+        await preloadImage(next.url);
+      } catch {
+        // image failed to load, still show the title
       }
+    }
 
-      setMeme(next);
-      setLoadingMeme(false);
-    },
-    [memes],
-  );
+    setMeme(next);
+    setLoadingMeme(false);
+  }
 
   useEffect(() => {
     fetch("/api/meme")
       .then((res) => res.json())
       .then((data) => {
-        const all: Meme[] = (data.memes || []).filter(
-          (m: Meme) => m.url,
-        );
-        setMemes(all);
-        pickRandom(all);
+        const all: Meme[] = (data.memes || []).filter((m: Meme) => m.url);
+        memesRef.current = all;
+        showRandom(all);
       })
-      .catch(() => {});
-  }, [pickRandom]);
+      .catch(() => setLoadingMeme(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Card>
@@ -92,7 +88,7 @@ export function CryptoMeme() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => pickRandom(memes)}
+            onClick={() => showRandom()}
             disabled={loadingMeme}
           >
             {loadingMeme ? "Loading..." : "Show another meme"}
