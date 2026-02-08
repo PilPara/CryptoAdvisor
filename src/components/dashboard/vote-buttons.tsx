@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 interface VoteButtonsProps {
@@ -16,6 +16,16 @@ export function VoteButtons({
 }: VoteButtonsProps) {
   const [currentVote, setCurrentVote] = useState<number | null>(initialVote);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/vote?section=${section}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const vote = data.votes?.[contentId];
+        if (vote !== undefined) setCurrentVote(vote);
+      })
+      .catch(() => {});
+  }, [section, contentId]);
 
   async function handleVote(vote: number) {
     if (loading) return;
