@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     if (!res.ok) throw new Error("CryptoPanic API error");
 
     const data = await res.json();
-    const news = (data.results || []).slice(0, 5);
+    const news = (data.results || []).slice(0, 20);
 
     return NextResponse.json({ news });
   } catch {
