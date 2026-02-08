@@ -44,7 +44,7 @@ export function CoinPrices({ assets }: { assets: string[] }) {
     <Card>
       <CardHeader>
         <CardTitle>Coin Prices</CardTitle>
-        <CardDescription>Live prices for your tracked assets</CardDescription>
+        <CardDescription>Live prices · 24h change</CardDescription>
       </CardHeader>
       <CardContent>
         {loading && <p className="text-sm text-muted-foreground">Loading prices...</p>}
@@ -83,8 +83,8 @@ export function CoinPrices({ assets }: { assets: string[] }) {
                         : "text-red-600"
                     }`}
                   >
-                    {coin.price_change_percentage_24h >= 0 ? "+" : ""}
-                    {coin.price_change_percentage_24h?.toFixed(2)}%
+                    {coin.price_change_percentage_24h >= 0 ? "▲" : "▼"}{" "}
+                    {Math.abs(coin.price_change_percentage_24h)?.toFixed(2)}% 24h
                   </div>
                 </div>
                 <VoteButtons section="prices" contentId={coin.id} />
