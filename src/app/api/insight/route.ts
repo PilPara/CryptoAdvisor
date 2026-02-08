@@ -33,7 +33,10 @@ async function fetchMarketData(assets: string[]): Promise<CoinData[]> {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       if (attempt > 0) await new Promise((r) => setTimeout(r, 1500));
-      const res = await fetch(url, { next: { revalidate: 60 } });
+      const res = await fetch(url, {
+        next: { revalidate: 60 },
+        headers: { "x-cg-demo-key": process.env.COINGECKO_API_KEY || "" },
+      });
       if (res.status === 429) continue; // rate-limited, retry
       if (!res.ok) return [];
       return await res.json();

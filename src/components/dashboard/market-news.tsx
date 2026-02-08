@@ -51,14 +51,14 @@ export function MarketNews({ assets }: { assets: string[] }) {
   }, [assets]);
 
   return (
-    <Card className="flex flex-col">
+    <Card className="h-full overflow-hidden">
       <CardHeader>
         <CardTitle>Market News</CardTitle>
         <CardDescription>
           Latest crypto news{news.length > 0 ? ` · ${news.length} stories` : ""}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 min-h-0">
+      <CardContent className="flex-1 min-h-0 flex flex-col">
         {loading && (
           <p className="text-sm text-muted-foreground">Loading news...</p>
         )}
@@ -68,7 +68,7 @@ export function MarketNews({ assets }: { assets: string[] }) {
         {!loading && !error && news.length === 0 && (
           <p className="text-sm text-muted-foreground">No news available.</p>
         )}
-        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+        <div className="space-y-2 flex-1 overflow-y-auto pr-1">
           {news.map((item, idx) => (
             <a
               key={item.id || `${item.url}-${idx}`}

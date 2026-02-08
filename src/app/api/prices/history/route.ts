@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
-const VALID_DAYS = ["1", "7", "30", "365", "1825", "max"];
+const VALID_DAYS = ["1", "7", "30", "365"];
 
 export async function GET(request: Request) {
   const { userId } = await auth();
@@ -28,21 +28,34 @@ export async function GET(request: Request) {
   }
 
   const revalidate = days === "1" ? 60 : 300;
+  const url = `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(coinId)}/market_chart?vs_currency=usd&days=${days}`;
 
-  try {
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(coinId)}/market_chart?vs_currency=usd&days=${days}`,
-      { next: { revalidate } },
-    );
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 1500));
 
-    if (!res.ok) throw new Error(`CoinGecko error: ${res.status}`);
+      const res = await fetch(url, {
+        next: { revalidate },
+        headers: { "x-cg-demo-key": process.env.COINGECKO_API_KEY || "" },
+      });
 
-    const data = await res.json();
-    return NextResponse.json({ prices: data.prices });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch price history" },
-      { status: 500 },
-    );
+      if (res.status === 429) continue; // rate-limited, retry
+      if (!res.ok) throw new Error(`CoinGecko error: ${res.status}`);
+
+      const data = await res.json();
+      return NextResponse.json({ prices: data.prices });
+    } catch (err) {
+      if (attempt === 2) {
+        return NextResponse.json(
+          { error: "Failed to fetch price history. Try again in a moment." },
+          { status: 500 },
+        );
+      }
+    }
   }
+
+  return NextResponse.json(
+    { error: "Failed to fetch price history" },
+    { status: 500 },
+  );
 }

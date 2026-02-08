@@ -26,7 +26,10 @@ export async function POST(request: Request) {
   try {
     const res = await fetch(
       `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc`,
-      { next: { revalidate: 60 } },
+      {
+        next: { revalidate: 60 },
+        headers: { "x-cg-demo-key": process.env.COINGECKO_API_KEY || "" },
+      },
     );
 
     if (!res.ok) throw new Error("CoinGecko API error");

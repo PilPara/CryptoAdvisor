@@ -1,12 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PriceChart } from "@/components/coin/price-chart";
 
@@ -27,7 +24,8 @@ interface CoinDetail {
 
 function formatNum(n: number | null | undefined): string {
   if (n == null) return "N/A";
-  if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(2)}B`;
+  if (n >= 1_000_000_000)
+    return `$${(n / 1_000_000_000).toFixed(2)}B`;
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
   return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
@@ -37,16 +35,30 @@ export default function CoinDetailPage() {
   const coinId = params.id as string;
   const [coin, setCoin] = useState<CoinDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchCoin = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    // Use the batch /markets endpoint — same one the dashboard uses.
+    // This is a single call that returns all the detail data we need,
+    // leaving the only other CoinGecko call to the chart history.
     fetch(`/api/prices/detail?coinId=${coinId}`)
       .then((res) => res.json())
       .then((data) => {
-        if (!data.error) setCoin(data);
+        if (data.error) {
+          setError(data.error);
+        } else {
+          setCoin(data);
+        }
       })
-      .catch(() => {})
+      .catch(() => setError("Failed to load coin data. Try again."))
       .finally(() => setLoading(false));
   }, [coinId]);
+
+  useEffect(() => {
+    fetchCoin();
+  }, [fetchCoin]);
 
   if (loading) {
     return (
@@ -56,15 +68,20 @@ export default function CoinDetailPage() {
     );
   }
 
-  if (!coin) {
+  if (error || !coin) {
     return (
-      <div className="mx-auto max-w-4xl py-8">
-        <p className="text-destructive">Coin not found.</p>
-        <Link href="/dashboard">
-          <Button variant="outline" className="mt-4">
-            Back to Dashboard
+      <div className="mx-auto max-w-4xl py-8 space-y-4">
+        <p className="text-destructive">
+          {error || "Coin not found."}
+        </p>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={fetchCoin}>
+            Try again
           </Button>
-        </Link>
+          <Link href="/dashboard">
+            <Button variant="ghost">Back to Dashboard</Button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -134,7 +151,7 @@ export default function CoinDetailPage() {
       </Card>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
         {[
           { label: "Market Cap", value: formatNum(coin.market_cap) },
           { label: "24h Volume", value: formatNum(coin.total_volume) },

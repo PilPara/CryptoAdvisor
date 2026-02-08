@@ -17,34 +17,56 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Invalid coinId" }, { status: 400 });
   }
 
-  try {
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(coinId)}?localization=false&tickers=false&community_data=false&developer_data=false`,
-      { next: { revalidate: 60 } },
-    );
+  // Use the batch /markets endpoint — much lighter on rate limits than /coins/{id}
+  const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${encodeURIComponent(coinId)}`;
 
-    if (!res.ok) throw new Error(`CoinGecko error: ${res.status}`);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 1500));
 
-    const data = await res.json();
-    return NextResponse.json({
-      id: data.id,
-      symbol: data.symbol,
-      name: data.name,
-      image: data.image?.large,
-      current_price: data.market_data?.current_price?.usd,
-      price_change_percentage_24h:
-        data.market_data?.price_change_percentage_24h,
-      market_cap: data.market_data?.market_cap?.usd,
-      total_volume: data.market_data?.total_volume?.usd,
-      high_24h: data.market_data?.high_24h?.usd,
-      low_24h: data.market_data?.low_24h?.usd,
-      ath: data.market_data?.ath?.usd,
-      atl: data.market_data?.atl?.usd,
-    });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch coin data" },
-      { status: 500 },
-    );
+      const res = await fetch(url, {
+        next: { revalidate: 60 },
+        headers: { "x-cg-demo-key": process.env.COINGECKO_API_KEY || "" },
+      });
+
+      if (res.status === 429) continue; // rate-limited, retry
+      if (!res.ok) throw new Error(`CoinGecko error: ${res.status}`);
+
+      const coins = await res.json();
+      if (!Array.isArray(coins) || coins.length === 0) {
+        return NextResponse.json(
+          { error: "Coin not found" },
+          { status: 404 },
+        );
+      }
+
+      const data = coins[0];
+      return NextResponse.json({
+        id: data.id,
+        symbol: data.symbol,
+        name: data.name,
+        image: data.image,
+        current_price: data.current_price,
+        price_change_percentage_24h: data.price_change_percentage_24h,
+        market_cap: data.market_cap,
+        total_volume: data.total_volume,
+        high_24h: data.high_24h,
+        low_24h: data.low_24h,
+        ath: data.ath,
+        atl: data.atl,
+      });
+    } catch {
+      if (attempt === 2) {
+        return NextResponse.json(
+          { error: "Failed to fetch coin data. Try again in a moment." },
+          { status: 500 },
+        );
+      }
+    }
   }
+
+  return NextResponse.json(
+    { error: "Failed to fetch coin data" },
+    { status: 500 },
+  );
 }

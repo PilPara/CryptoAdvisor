@@ -44,9 +44,18 @@ export default async function DashboardPage() {
         </p>
       </div>
 
+      {/* Top row: Coin prices determines the height, news matches it */}
+      <div className="relative md:flex md:gap-6">
+        <div className="min-h-[480px] md:w-1/2">
+          <CoinPrices assets={userPrefs.assets} />
+        </div>
+        <div className="mt-6 md:mt-0 md:absolute md:right-0 md:top-0 md:bottom-0 md:w-[calc(50%-0.75rem)]">
+          <MarketNews assets={userPrefs.assets} />
+        </div>
+      </div>
+
+      {/* Bottom row */}
       <div className="grid gap-6 md:grid-cols-2">
-        <CoinPrices assets={userPrefs.assets} />
-        <MarketNews assets={userPrefs.assets} />
         <AiInsight
           assets={userPrefs.assets}
           investorType={userPrefs.investorType}
