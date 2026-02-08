@@ -17,7 +17,7 @@ export default async function DashboardPage() {
   const user = await db
     .select()
     .from(users)
-    .where(eq(users.clerkId, userId as string));
+    .where(eq(users.clerkId, userId));
 
   let dbUser = user[0];
   if (!dbUser) {

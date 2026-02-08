@@ -22,41 +22,17 @@ export function MarketNews({ assets }: { assets: string[] }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const currencies = assets.join(",");
-
-    fetch(
-      `https://cryptopanic.com/api/free/v1/posts/?auth_token=demo&currencies=${currencies}&kind=news&public=true`
-    )
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch news");
-        return res.json();
+    fetch("/api/news", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assets }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) setError(data.error);
+        else setNews(data.news || []);
       })
-      .then((data) => setNews((data.results || []).slice(0, 5)))
-      .catch((err) => {
-        setError(err.message);
-        // Static fallback
-        setNews([
-          {
-            title: "Bitcoin hits new milestone as institutional adoption grows",
-            url: "#",
-            source: { title: "CryptoNews" },
-            published_at: new Date().toISOString(),
-          },
-          {
-            title: "Ethereum upgrades promise faster transaction speeds",
-            url: "#",
-            source: { title: "CoinDesk" },
-            published_at: new Date().toISOString(),
-          },
-          {
-            title: "DeFi protocols see record total value locked",
-            url: "#",
-            source: { title: "The Block" },
-            published_at: new Date().toISOString(),
-          },
-        ]);
-        setError(null);
-      })
+      .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [assets]);
 
@@ -72,9 +48,9 @@ export function MarketNews({ assets }: { assets: string[] }) {
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="space-y-3">
-          {news.map((item, i) => (
+          {news.map((item) => (
             <a
-              key={i}
+              key={item.title}
               href={item.url}
               target="_blank"
               rel="noopener noreferrer"

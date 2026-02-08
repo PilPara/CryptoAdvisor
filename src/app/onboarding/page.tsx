@@ -11,43 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-
-const ASSETS = [
-  { id: "BTC", label: "Bitcoin (BTC)" },
-  { id: "ETH", label: "Ethereum (ETH)" },
-  { id: "SOL", label: "Solana (SOL)" },
-  { id: "BNB", label: "BNB (BNB)" },
-  { id: "XRP", label: "Ripple (XRP)" },
-  { id: "ADA", label: "Cardano (ADA)" },
-  { id: "DOGE", label: "Dogecoin (DOGE)" },
-  { id: "AVAX", label: "Avalanche (AVAX)" },
-];
-
-const INVESTOR_TYPES = [
-  { id: "hodler", label: "HODLer", description: "Buy and hold long-term" },
-  {
-    id: "day-trader",
-    label: "Day Trader",
-    description: "Short-term trades for quick gains",
-  },
-  {
-    id: "nft-collector",
-    label: "NFT Collector",
-    description: "Focused on digital collectibles",
-  },
-  {
-    id: "defi-explorer",
-    label: "DeFi Explorer",
-    description: "Yield farming, staking, and protocols",
-  },
-];
-
-const CONTENT_TYPES = [
-  { id: "news", label: "Market News" },
-  { id: "prices", label: "Coin Prices & Charts" },
-  { id: "social", label: "Social & Community" },
-  { id: "fun", label: "Fun & Memes" },
-];
+import { ASSETS, INVESTOR_TYPES, CONTENT_TYPES } from "@/lib/constants";
 
 export default function OnboardingPage() {
   const [assets, setAssets] = useState<string[]>([]);

@@ -15,4 +15,5 @@ export const preferences = pgTable("preferences", {
   assets: text("assets").array().notNull(),
   investorType: text("investor_type").notNull(),
   contentTypes: text("content_types").array().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
