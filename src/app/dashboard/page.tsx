@@ -14,10 +14,7 @@ export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) redirect("/");
 
-  const user = await db
-    .select()
-    .from(users)
-    .where(eq(users.clerkId, userId));
+  const user = await db.select().from(users).where(eq(users.clerkId, userId));
 
   let dbUser = user[0];
   if (!dbUser) {

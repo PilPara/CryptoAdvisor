@@ -85,8 +85,10 @@ function leaderBoard(gainer: CoinData, loser: CoinData): string {
 }
 
 function avgSummary(avg: number, count: number): string {
-  if (avg > 3) return `Your ${count} tracked assets are averaging ${fmtPct(avg)} — a solid green day.`;
-  if (avg < -3) return `Your ${count} tracked assets are averaging ${fmtPct(avg)} — a rough day across the board.`;
+  if (avg > 3)
+    return `Your ${count} tracked assets are averaging ${fmtPct(avg)} — a solid green day.`;
+  if (avg < -3)
+    return `Your ${count} tracked assets are averaging ${fmtPct(avg)} — a rough day across the board.`;
   return `Your ${count} tracked assets are relatively stable, averaging ${fmtPct(avg)} over 24h.`;
 }
 
@@ -118,11 +120,17 @@ const hodlerVariants: ((ctx: Ctx) => string)[] = [
     const c = pick(ctx.coins);
     const parts = [priceLine(c)];
     if (c.price_change_percentage_24h < -5)
-      parts.push("Dips like this have historically been accumulation zones for patient holders.");
+      parts.push(
+        "Dips like this have historically been accumulation zones for patient holders.",
+      );
     else if (c.price_change_percentage_24h > 5)
-      parts.push("Strong move — but don't let FOMO push you to overextend. Stick to your DCA plan.");
+      parts.push(
+        "Strong move — but don't let FOMO push you to overextend. Stick to your DCA plan.",
+      );
     else
-      parts.push("Sideways consolidation often precedes the next big move. Patience pays.");
+      parts.push(
+        "Sideways consolidation often precedes the next big move. Patience pays.",
+      );
     parts.push(
       pick([
         "Consider whether your current allocation still reflects your conviction levels.",
@@ -133,9 +141,7 @@ const hodlerVariants: ((ctx: Ctx) => string)[] = [
     return parts.join(" ");
   },
   (ctx) => {
-    const sorted = [...ctx.coins].sort(
-      (a, b) => b.market_cap - a.market_cap,
-    );
+    const sorted = [...ctx.coins].sort((a, b) => b.market_cap - a.market_cap);
     const top = sorted[0];
     const parts = [
       `Your highest market cap holding is ${top.name} at ${fmtPrice(top.current_price)} (${fmtPct(top.price_change_percentage_24h)}).`,
@@ -201,7 +207,9 @@ const dayTraderVariants: ((ctx: Ctx) => string)[] = [
         `The ${spread.toFixed(1)}% intraday range is moderate. Look for clean breakouts above ${fmtPrice(c.high_24h)} or breakdowns below ${fmtPrice(c.low_24h)}.`,
       );
     else
-      parts.push("Tight range — consider smaller position sizes until volatility picks up.");
+      parts.push(
+        "Tight range — consider smaller position sizes until volatility picks up.",
+      );
     parts.push(
       pick([
         "In choppy markets, reducing position size is just as valid as sitting on your hands.",
@@ -216,13 +224,17 @@ const dayTraderVariants: ((ctx: Ctx) => string)[] = [
     const parts = [avgSummary(avg, coins.length)];
     if (coins.length > 1) parts.push(leaderBoard(gainer, loser));
     if (avg > 3)
-      parts.push("Momentum is on the buyers' side. Trail your stops and let winners run.");
+      parts.push(
+        "Momentum is on the buyers' side. Trail your stops and let winners run.",
+      );
     else if (avg < -3)
       parts.push(
         "Sellers are in control. Look for short setups or oversold bounce plays at key support levels.",
       );
     else
-      parts.push("Range-bound conditions favor mean reversion strategies. Buy support, sell resistance.");
+      parts.push(
+        "Range-bound conditions favor mean reversion strategies. Buy support, sell resistance.",
+      );
     return parts.filter(Boolean).join(" ");
   },
 ];
@@ -283,9 +295,7 @@ const defiVariants: ((ctx: Ctx) => string)[] = [
       parts.push(
         `DeFi chains: ${chains.map((c) => `${ticker(c.id)} ${fmtPrice(c.current_price)} (${fmtPct(c.price_change_percentage_24h)})`).join(" · ")}.`,
       );
-      const rising = chains.filter(
-        (c) => c.price_change_percentage_24h > 2,
-      );
+      const rising = chains.filter((c) => c.price_change_percentage_24h > 2);
       if (rising.length > 0)
         parts.push(
           `Positive price action on ${rising.map((c) => ticker(c.id)).join(", ")} often correlates with rising TVL and better yield opportunities.`,
@@ -424,31 +434,28 @@ export async function POST(request: Request) {
   // Try AI-powered insight if API key is configured
   if (process.env.OPENROUTER_API_KEY) {
     try {
-      const res = await fetch(
-        "https://openrouter.ai/api/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "deepseek/deepseek-chat-v3-0324:free",
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are a crypto market analyst. Give a short, helpful daily insight (2-3 sentences). Be specific about price movements and tailored to the investor type. Not financial advice.",
-              },
-              {
-                role: "user",
-                content: `I'm a ${safeInvestorType} investor tracking: ${safeAssets}. Current prices: ${marketContext}. Give me a personalized insight for today.`,
-              },
-            ],
-            max_tokens: 200,
-          }),
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
         },
-      );
+        body: JSON.stringify({
+          model: "deepseek/deepseek-chat-v3-0324:free",
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a crypto market analyst. Give a short, helpful daily insight (2-3 sentences). Be specific about price movements and tailored to the investor type. Not financial advice.",
+            },
+            {
+              role: "user",
+              content: `I'm a ${safeInvestorType} investor tracking: ${safeAssets}. Current prices: ${marketContext}. Give me a personalized insight for today.`,
+            },
+          ],
+          max_tokens: 200,
+        }),
+      });
 
       if (!res.ok) throw new Error("OpenRouter API error");
 
