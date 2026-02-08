@@ -9,6 +9,7 @@ import { CoinPrices } from "@/components/dashboard/coin-prices";
 import { MarketNews } from "@/components/dashboard/market-news";
 import { AiInsight } from "@/components/dashboard/ai-insight";
 import { CryptoMeme } from "@/components/dashboard/crypto-meme";
+import { SyncedRow } from "@/components/dashboard/synced-row";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -45,14 +46,10 @@ export default async function DashboardPage() {
       </div>
 
       {/* Top row: Coin prices determines the height, news matches it */}
-      <div className="relative md:flex md:gap-6">
-        <div className="min-h-[480px] md:w-1/2">
-          <CoinPrices assets={userPrefs.assets} />
-        </div>
-        <div className="mt-6 md:mt-0 md:absolute md:right-0 md:top-0 md:bottom-0 md:w-[calc(50%-0.75rem)]">
-          <MarketNews assets={userPrefs.assets} />
-        </div>
-      </div>
+      <SyncedRow
+        left={<CoinPrices assets={userPrefs.assets} />}
+        right={<MarketNews assets={userPrefs.assets} />}
+      />
 
       {/* Bottom row */}
       <div className="grid gap-6 md:grid-cols-2">
