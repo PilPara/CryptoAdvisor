@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -9,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { VoteButtons } from "@/components/dashboard/vote-buttons";
+import { AddCoinButton } from "@/components/dashboard/add-coin-button";
 
 interface CoinData {
   id: string;
@@ -21,15 +23,17 @@ interface CoinData {
 }
 
 export function CoinPrices({ assets }: { assets: string[] }) {
+  const [trackedAssets, setTrackedAssets] = useState<string[]>(assets);
   const [coins, setCoins] = useState<CoinData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoading(true);
     fetch("/api/prices", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ assets }),
+      body: JSON.stringify({ assets: trackedAssets }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -38,41 +42,58 @@ export function CoinPrices({ assets }: { assets: string[] }) {
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [assets]);
+  }, [trackedAssets]);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Coin Prices</CardTitle>
-        <CardDescription>Live prices · 24h change</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Coin Prices</CardTitle>
+            <CardDescription>Live prices · 24h change</CardDescription>
+          </div>
+          <AddCoinButton
+            currentAssets={trackedAssets}
+            onAssetAdded={setTrackedAssets}
+          />
+        </div>
       </CardHeader>
       <CardContent>
-        {loading && <p className="text-sm text-muted-foreground">Loading prices...</p>}
+        {loading && (
+          <p className="text-sm text-muted-foreground">Loading prices...</p>
+        )}
         {error && <p className="text-sm text-destructive">{error}</p>}
         {!loading && !error && coins.length === 0 && (
-          <p className="text-sm text-muted-foreground">No price data available.</p>
+          <p className="text-sm text-muted-foreground">
+            No price data available.
+          </p>
         )}
         <div className="space-y-3">
           {coins.map((coin) => (
             <div
               key={coin.id}
-              className="flex items-center justify-between rounded-lg border p-3"
+              className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors"
             >
-              <div className="flex items-center gap-3">
+              <Link
+                href={`/coin/${coin.id}`}
+                className="flex items-center gap-3 flex-1 min-w-0"
+              >
                 <img
                   src={coin.image}
                   alt={coin.name}
                   className="h-8 w-8 rounded-full"
                 />
                 <div>
-                  <div className="font-medium">{coin.name}</div>
+                  <div className="font-medium hover:underline">
+                    {coin.name}
+                  </div>
                   <div className="text-sm text-muted-foreground uppercase">
                     {coin.symbol}
                   </div>
                 </div>
-              </div>
+              </Link>
               <div className="flex items-center gap-2">
-                <div className="text-right">
+                <Link href={`/coin/${coin.id}`} className="text-right">
                   <div className="font-medium">
                     ${coin.current_price.toLocaleString()}
                   </div>
@@ -84,9 +105,10 @@ export function CoinPrices({ assets }: { assets: string[] }) {
                     }`}
                   >
                     {coin.price_change_percentage_24h >= 0 ? "▲" : "▼"}{" "}
-                    {Math.abs(coin.price_change_percentage_24h)?.toFixed(2)}% 24h
+                    {Math.abs(coin.price_change_percentage_24h)?.toFixed(2)}%
+                    24h
                   </div>
-                </div>
+                </Link>
                 <VoteButtons section="prices" contentId={coin.id} />
               </div>
             </div>
