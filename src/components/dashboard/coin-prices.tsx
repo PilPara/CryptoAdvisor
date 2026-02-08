@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { VoteButtons } from "@/components/dashboard/vote-buttons";
 
 interface CoinData {
   id: string;
@@ -70,20 +71,23 @@ export function CoinPrices({ assets }: { assets: string[] }) {
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="font-medium">
-                  ${coin.current_price.toLocaleString()}
+              <div className="flex items-center gap-2">
+                <div className="text-right">
+                  <div className="font-medium">
+                    ${coin.current_price.toLocaleString()}
+                  </div>
+                  <div
+                    className={`text-sm ${
+                      coin.price_change_percentage_24h >= 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {coin.price_change_percentage_24h >= 0 ? "+" : ""}
+                    {coin.price_change_percentage_24h?.toFixed(2)}%
+                  </div>
                 </div>
-                <div
-                  className={`text-sm ${
-                    coin.price_change_percentage_24h >= 0
-                      ? "text-green-600"
-                      : "text-red-600"
-                  }`}
-                >
-                  {coin.price_change_percentage_24h >= 0 ? "+" : ""}
-                  {coin.price_change_percentage_24h?.toFixed(2)}%
-                </div>
+                <VoteButtons section="prices" contentId={coin.id} />
               </div>
             </div>
           ))}

@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { VoteButtons } from "@/components/dashboard/vote-buttons";
 
 interface Meme {
   title: string;
@@ -56,9 +57,12 @@ export function CryptoMeme() {
             )}
           </>
         )}
-        <Button variant="outline" size="sm" onClick={() => pickRandom(memes)}>
-          Show another meme
-        </Button>
+        <div className="flex items-center justify-between">
+          <Button variant="outline" size="sm" onClick={() => pickRandom(memes)}>
+            Show another meme
+          </Button>
+          {meme && <VoteButtons section="meme" contentId={meme.title} />}
+        </div>
       </CardContent>
     </Card>
   );

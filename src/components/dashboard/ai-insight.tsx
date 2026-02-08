@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { VoteButtons } from "@/components/dashboard/vote-buttons";
 
 interface AiInsightProps {
   assets: string[];
@@ -48,7 +49,13 @@ export function AiInsight({ assets, investorType }: AiInsightProps) {
             Generating your insight...
           </p>
         ) : (
-          <p className="leading-relaxed">{insight}</p>
+          <div className="space-y-3">
+            <p className="leading-relaxed">{insight}</p>
+            <VoteButtons
+              section="insight"
+              contentId={new Date().toISOString().split("T")[0]}
+            />
+          </div>
         )}
       </CardContent>
     </Card>

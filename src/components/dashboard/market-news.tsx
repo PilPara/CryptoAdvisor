@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { VoteButtons } from "@/components/dashboard/vote-buttons";
 
 interface NewsItem {
   title: string;
@@ -49,22 +50,27 @@ export function MarketNews({ assets }: { assets: string[] }) {
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="space-y-3">
           {news.map((item) => (
-            <a
+            <div
               key={item.title}
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block rounded-lg border p-3 transition-colors hover:bg-accent"
+              className="flex items-start justify-between gap-2 rounded-lg border p-3"
             >
-              <div className="font-medium leading-snug">{item.title}</div>
-              <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                <span>{item.source.title}</span>
-                <span>&middot;</span>
-                <span>
-                  {new Date(item.published_at).toLocaleDateString()}
-                </span>
-              </div>
-            </a>
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 transition-colors hover:text-primary"
+              >
+                <div className="font-medium leading-snug">{item.title}</div>
+                <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>{item.source.title}</span>
+                  <span>&middot;</span>
+                  <span>
+                    {new Date(item.published_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </a>
+              <VoteButtons section="news" contentId={item.url} />
+            </div>
           ))}
         </div>
       </CardContent>
