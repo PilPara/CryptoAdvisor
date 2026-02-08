@@ -52,7 +52,7 @@ export function CryptoMeme() {
 
   useEffect(() => {
     fetch("/api/meme")
-      .then((res) => res.json())
+      .then((response) => response.json())
       .then((data) => {
         const all: Meme[] = (data.memes || []).filter((m: Meme) => m.url);
         memesRef.current = all;

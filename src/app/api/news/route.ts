@@ -14,7 +14,7 @@ interface CryptoCompareArticle {
   categories: string;
 }
 
-/** Map our asset IDs to CryptoCompare category strings */
+// map asset IDs to CryptoCompare category strings
 const ASSET_TO_CC_CATEGORY: Record<string, string> = {
   BTC: "BTC",
   ETH: "ETH",
@@ -33,16 +33,17 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { assets } = body;
 
+  // validate input
   if (
     !Array.isArray(assets) ||
-    !assets.every((a: string) => VALID_ASSET_IDS.includes(a))
+    !assets.every((asset: string) => VALID_ASSET_IDS.includes(asset))
   ) {
     return NextResponse.json({ error: "Invalid assets" }, { status: 400 });
   }
 
-  // Build category filter from user's tracked assets
+  // build category filter from user's tracked assets
   const categories = assets
-    .map((a: string) => ASSET_TO_CC_CATEGORY[a])
+    .map((asset: string) => ASSET_TO_CC_CATEGORY[asset])
     .filter(Boolean)
     .join(",");
 
@@ -51,22 +52,22 @@ export async function POST(request: Request) {
     : `https://min-api.cryptocompare.com/data/v2/news/?lang=EN`;
 
   try {
-    const res = await fetch(url, { next: { revalidate: 300 } });
+    const response = await fetch(url, { next: { revalidate: 300 } });
 
-    if (!res.ok) throw new Error("CryptoCompare API error");
+    if (!response.ok) throw new Error("CryptoCompare API error");
 
-    const data = await res.json();
+    const data = await response.json();
     const articles: CryptoCompareArticle[] = data.Data || [];
 
-    // Transform to our standard format
-    const news = articles.slice(0, 20).map((a) => ({
-      id: String(a.id),
-      title: a.title,
-      url: a.url,
-      body: a.body?.slice(0, 200) || "",
-      source: { title: a.source_info?.name || a.source },
-      published_at: new Date(a.published_on * 1000).toISOString(),
-      image: a.imageurl || null,
+    // transform to standard format
+    const news = articles.slice(0, 20).map((article) => ({
+      id: String(article.id),
+      title: article.title,
+      url: article.url,
+      body: article.body?.slice(0, 200) || "",
+      source: { title: article.source_info?.name || article.source },
+      published_at: new Date(article.published_on * 1000).toISOString(),
+      image: article.imageurl || null,
     }));
 
     return NextResponse.json({ news });

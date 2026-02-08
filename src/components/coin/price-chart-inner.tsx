@@ -101,7 +101,7 @@ export default function PriceChartInner({ coinId }: PriceChartInnerProps) {
     setError(null);
 
     fetch(`/api/prices/history?coinId=${coinId}&days=${selectedRange}`)
-      .then((res) => res.json())
+      .then((response) => response.json())
       .then((data) => {
         if (cancelled) return;
         if (data.error) {

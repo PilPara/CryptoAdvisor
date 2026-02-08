@@ -14,6 +14,7 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { section, contentId, vote } = body;
 
+  // validate input
   if (
     !VALID_SECTIONS.includes(section) ||
     typeof contentId !== "string" ||
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
 
   const dbUserId = user[0].id;
 
-  // Check for existing vote
+  // check for existing vote
   const existing = await db
     .select()
     .from(votes)
@@ -50,11 +51,11 @@ export async function POST(request: Request) {
 
   if (existing.length > 0) {
     if (existing[0].vote === vote) {
-      // Same vote — remove it (toggle off)
+      // same vote — remove it (toggle off)
       await db.delete(votes).where(eq(votes.id, existing[0].id));
       return NextResponse.json({ vote: null });
     } else {
-      // Different vote — update it
+      // different vote — update it
       await db
         .update(votes)
         .set({ vote, createdAt: new Date() })
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
     }
   }
 
-  // New vote — insert
+  // new vote — insert
   await db.insert(votes).values({
     userId: dbUserId,
     section,
@@ -100,7 +101,7 @@ export async function GET(request: Request) {
     .from(votes)
     .where(and(eq(votes.userId, user[0].id), eq(votes.section, section)));
 
-  // Return as a map of contentId -> vote value
+  // return as a map of contentId -> vote value
   const voteMap: Record<string, number> = {};
   for (const v of userVotes) {
     voteMap[v.contentId] = v.vote;

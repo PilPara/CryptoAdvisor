@@ -10,20 +10,9 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 
-// const geistSans = Geist({
-//   variable: "--font-geist-sans",
-//   subsets: ["latin"],
-// });
-//
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });
-
 export const metadata: Metadata = {
   title: "AI Crypto Advisor",
-  description:
-    "Personalized crypto investor dashboard with AI-curated content",
+  description: "Personalized crypto investor dashboard with AI-curated content",
 };
 
 export default function RootLayout({
@@ -37,12 +26,18 @@ export default function RootLayout({
         <body className="min-h-screen antialiased">
           <header className="flex items-center justify-between p-4 border-b">
             <SignedIn>
-              <Link href="/dashboard" className="font-semibold hover:opacity-80 transition-opacity">
+              <Link
+                href="/dashboard"
+                className="font-semibold hover:opacity-80 transition-opacity"
+              >
                 AI Crypto Advisor
               </Link>
             </SignedIn>
             <SignedOut>
-              <Link href="/sign-up" className="font-semibold hover:opacity-80 transition-opacity">
+              <Link
+                href="/sign-up"
+                className="font-semibold hover:opacity-80 transition-opacity"
+              >
                 AI Crypto Advisor
               </Link>
             </SignedOut>

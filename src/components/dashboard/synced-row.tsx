@@ -6,6 +6,7 @@ import { useCallback, useRef, type ReactNode } from "react";
  * Two-column row where the LEFT column determines the height
  * and the RIGHT column is constrained to match (scrolls internally).
  */
+
 export function SyncedRow({
   left,
   right,

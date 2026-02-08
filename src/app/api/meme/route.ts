@@ -19,7 +19,7 @@ export async function GET() {
   // Try multiple subreddits for a bigger pool
   for (const sub of SUBREDDITS) {
     try {
-      const res = await fetch(
+      const response = await fetch(
         `https://www.reddit.com/r/${sub}/hot.json?limit=50`,
         {
           headers: { "User-Agent": "crypto-advisor-app/1.0" },
@@ -27,21 +27,22 @@ export async function GET() {
         },
       );
 
-      if (!res.ok) continue;
+      if (!response.ok) continue;
 
-      const data = await res.json();
+      const data = await response.json();
       const memes = (data?.data?.children || [])
-        .map((c: RedditPost) => c.data)
+        .map((reditPost: RedditPost) => reditPost.data)
         .filter(
-          (p: RedditPost["data"]) =>
-            p.post_hint === "image" &&
-            (p.url.endsWith(".jpg") ||
-              p.url.endsWith(".png") ||
-              p.url.endsWith(".gif")),
+          (post: RedditPost["data"]) =>
+            post.post_hint === "image" &&
+            (post.url.endsWith(".jpg") ||
+              post.url.endsWith(".jpeg") ||
+              post.url.endsWith(".png") ||
+              post.url.endsWith(".gif")),
         )
-        .map((p: RedditPost["data"]) => ({
-          title: p.title,
-          url: p.url,
+        .map((post: RedditPost["data"]) => ({
+          title: post.title,
+          url: post.url,
         }));
 
       if (memes.length >= 5) {
@@ -54,8 +55,8 @@ export async function GET() {
 
   // Fallback: use Imgflip API top memes with crypto captions
   try {
-    const res = await fetch("https://api.imgflip.com/get_memes");
-    const data = await res.json();
+    const response = await fetch("https://api.imgflip.com/get_memes");
+    const data = await response.json();
     const templates = (data?.data?.memes || []).slice(0, 25);
 
     const captions = [
@@ -87,9 +88,9 @@ export async function GET() {
     ];
 
     const memes = templates.map(
-      (t: { name: string; url: string }, i: number) => ({
-        title: captions[i] || t.name,
-        url: t.url,
+      (template: { name: string; url: string }, i: number) => ({
+        title: captions[i] || template.name,
+        url: template.url,
       }),
     );
 

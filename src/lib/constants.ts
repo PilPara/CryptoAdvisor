@@ -9,10 +9,10 @@ export const ASSETS = [
   { id: "AVAX", label: "Avalanche (AVAX)", coingeckoId: "avalanche-2" },
 ] as const;
 
-export const VALID_ASSET_IDS: string[] = ASSETS.map((a) => a.id);
+export const VALID_ASSET_IDS: string[] = ASSETS.map((asset) => asset.id);
 
 export const ASSET_TO_COINGECKO: Record<string, string> = Object.fromEntries(
-  ASSETS.map((a) => [a.id, a.coingeckoId]),
+  ASSETS.map((asset) => [asset.id, asset.coingeckoId]),
 );
 
 export const INVESTOR_TYPES = [
@@ -34,7 +34,9 @@ export const INVESTOR_TYPES = [
   },
 ] as const;
 
-export const VALID_INVESTOR_TYPE_IDS: string[] = INVESTOR_TYPES.map((t) => t.id);
+export const VALID_INVESTOR_TYPE_IDS: string[] = INVESTOR_TYPES.map(
+  (t) => t.id,
+);
 
 export const CONTENT_TYPES = [
   { id: "news", label: "Market News" },

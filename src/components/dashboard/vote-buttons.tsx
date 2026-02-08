@@ -20,7 +20,7 @@ export function VoteButtons({
   useEffect(() => {
     setCurrentVote(null);
     fetch(`/api/vote?section=${section}`)
-      .then((res) => res.json())
+      .then((response) => response.json())
       .then((data) => {
         const vote = data.votes?.[contentId];
         setCurrentVote(vote ?? null);
@@ -33,13 +33,13 @@ export function VoteButtons({
     setLoading(true);
 
     try {
-      const res = await fetch("/api/vote", {
+      const response = await fetch("/api/vote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ section, contentId, vote }),
       });
 
-      const data = await res.json();
+      const data = await response.json();
       setCurrentVote(data.vote ?? null);
     } catch {
       // silently fail

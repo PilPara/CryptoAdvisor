@@ -41,7 +41,7 @@ export function MarketNews({ assets }: { assets: string[] }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ assets }),
     })
-      .then((res) => res.json())
+      .then((response) => response.json())
       .then((data) => {
         if (data.error) setError(data.error);
         setNews(data.news || []);
@@ -108,10 +108,7 @@ export function MarketNews({ assets }: { assets: string[] }) {
                   <span>{timeAgo(item.published_at)}</span>
                 </div>
               </div>
-              <div
-                className="shrink-0"
-                onClick={(e) => e.preventDefault()}
-              >
+              <div className="shrink-0" onClick={(e) => e.preventDefault()}>
                 <VoteButtons section="news" contentId={item.id || item.url} />
               </div>
             </a>

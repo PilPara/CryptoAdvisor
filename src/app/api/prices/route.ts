@@ -9,22 +9,23 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { assets } = body;
 
+  // validate input
   if (
     !Array.isArray(assets) ||
-    !assets.every((a: string) => VALID_ASSET_IDS.includes(a))
+    !assets.every((asset: string) => VALID_ASSET_IDS.includes(asset))
   ) {
     return NextResponse.json({ error: "Invalid assets" }, { status: 400 });
   }
 
   const ids = assets
-    .map((a: string) => ASSET_TO_COINGECKO[a])
+    .map((asset: string) => ASSET_TO_COINGECKO[asset])
     .filter(Boolean)
     .join(",");
 
   if (!ids) return NextResponse.json({ coins: [] });
 
   try {
-    const res = await fetch(
+    const response = await fetch(
       `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc`,
       {
         next: { revalidate: 60 },
@@ -32,9 +33,9 @@ export async function POST(request: Request) {
       },
     );
 
-    if (!res.ok) throw new Error("CoinGecko API error");
+    if (!response.ok) throw new Error("CoinGecko API error");
 
-    const coins = await res.json();
+    const coins = await response.json();
     return NextResponse.json({ coins });
   } catch {
     return NextResponse.json({ coins: [], error: "Failed to fetch prices" });

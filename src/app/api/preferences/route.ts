@@ -12,6 +12,7 @@ export async function PATCH(request: Request) {
   const body = await request.json();
   const { assets } = body;
 
+  // validate input
   if (
     !Array.isArray(assets) ||
     assets.length === 0 ||

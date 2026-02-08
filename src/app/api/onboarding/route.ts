@@ -16,11 +16,11 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { assets, investorType, contentTypes } = body;
 
-  // Validate input
+  // validate input
   if (
     !Array.isArray(assets) ||
     assets.length === 0 ||
-    !assets.every((a: string) => VALID_ASSET_IDS.includes(a))
+    !assets.every((asset: string) => VALID_ASSET_IDS.includes(asset))
   ) {
     return NextResponse.json({ error: "Invalid assets" }, { status: 400 });
   }
@@ -35,7 +35,9 @@ export async function POST(request: Request) {
   if (
     !Array.isArray(contentTypes) ||
     contentTypes.length === 0 ||
-    !contentTypes.every((c: string) => VALID_CONTENT_TYPE_IDS.includes(c))
+    !contentTypes.every((contentType: string) =>
+      VALID_CONTENT_TYPE_IDS.includes(contentType),
+    )
   ) {
     return NextResponse.json(
       { error: "Invalid content types" },
@@ -53,7 +55,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  // Prevent duplicate preferences
+  // prevent duplicate preferences
   const existing = await db
     .select()
     .from(preferences)

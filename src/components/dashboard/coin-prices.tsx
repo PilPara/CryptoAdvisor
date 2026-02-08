@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Card,
   CardContent,
@@ -23,10 +24,10 @@ interface CoinData {
   market_cap: number;
 }
 
-/** Build placeholder rows from the constants for assets that aren't loaded yet */
+// build placeholder rows from the constants for assets that aren't loaded yet
 function getPlaceholderRows(assetIds: string[]) {
   return assetIds.map((id) => {
-    const meta = ASSETS.find((a) => a.id === id);
+    const meta = ASSETS.find((asset) => asset.id === id);
     return {
       assetId: id,
       coingeckoId: ASSET_TO_COINGECKO[id] || id.toLowerCase(),
@@ -42,34 +43,48 @@ export function CoinPrices({ assets }: { assets: string[] }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPrices = useCallback(() => {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    setTrackedAssets(assets);
+  }, [assets]);
+
+  const doFetchPrices = useCallback(() => {
     fetch("/api/prices", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ assets: trackedAssets }),
     })
-      .then((res) => res.json())
+      .then(async (response) => {
+        if (!response.ok) {
+          const text = await response.text().catch(() => "");
+          throw new Error(text || `Request failed (${response.status})`);
+        }
+        return response.json();
+      })
       .then((data) => {
         if (data.error) {
           setError(data.error);
-          // Keep any previously loaded coins as cache
+          // keep any previously loaded coins as cache
           if (data.coins?.length) setCoins(data.coins);
         } else {
           setCoins(data.coins || []);
         }
       })
-      .catch((err) => setError(err.message))
+      .catch((error) => setError(error.message))
       .finally(() => setLoading(false));
   }, [trackedAssets]);
 
-  useEffect(() => {
-    fetchPrices();
-  }, [fetchPrices]);
+  const fetchPrices = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    doFetchPrices();
+  }, [doFetchPrices]);
 
-  // Build a lookup map from coingecko id → CoinData for loaded coins
-  const coinMap = new Map(coins.map((c) => [c.id, c]));
+  useEffect(() => {
+    doFetchPrices();
+  }, [doFetchPrices]);
+
+  // build a lookup map from coingecko id → CoinData for loaded coins
+  const coinMap = new Map(coins.map((coin) => [coin.id, coin]));
   const placeholders = getPlaceholderRows(trackedAssets);
 
   return (
@@ -96,25 +111,29 @@ export function CoinPrices({ assets }: { assets: string[] }) {
           </div>
           <AddCoinButton
             currentAssets={trackedAssets}
-            onAssetAdded={setTrackedAssets}
+            onAssetAdded={(newAssets) => {
+              setLoading(true);
+              setError(null);
+              setTrackedAssets(newAssets);
+            }}
           />
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           {loading && coins.length === 0
-            ? /* Skeleton rows while first load */
-              placeholders.map((p) => (
+            ? /* skeleton rows while first load */
+              placeholders.map((placeholder) => (
                 <div
-                  key={p.assetId}
+                  key={placeholder.assetId}
                   className="flex items-center justify-between rounded-lg border p-3"
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
                     <div>
-                      <div className="font-medium">{p.name}</div>
+                      <div className="font-medium">{placeholder.name}</div>
                       <div className="text-sm text-muted-foreground uppercase">
-                        {p.symbol}
+                        {placeholder.symbol}
                       </div>
                     </div>
                   </div>
@@ -124,9 +143,9 @@ export function CoinPrices({ assets }: { assets: string[] }) {
                   </div>
                 </div>
               ))
-            : /* Render rows for each tracked asset — show real data or fallback */
-              placeholders.map((p) => {
-                const coin = coinMap.get(p.coingeckoId);
+            : /* render rows for each tracked asset — show real data or fallback */
+              placeholders.map((placeholder) => {
+                const coin = coinMap.get(placeholder.coingeckoId);
                 if (coin) {
                   return (
                     <div
@@ -137,10 +156,13 @@ export function CoinPrices({ assets }: { assets: string[] }) {
                         href={`/coin/${coin.id}`}
                         className="flex items-center gap-3 flex-1 min-w-0"
                       >
-                        <img
+                        <Image
                           src={coin.image}
                           alt={coin.name}
-                          className="h-8 w-8 rounded-full"
+                          width={32}
+                          height={32}
+                          className="rounded-full"
+                          unoptimized
                         />
                         <div>
                           <div className="font-medium hover:underline">
@@ -152,10 +174,7 @@ export function CoinPrices({ assets }: { assets: string[] }) {
                         </div>
                       </Link>
                       <div className="flex items-center gap-2">
-                        <Link
-                          href={`/coin/${coin.id}`}
-                          className="text-right"
-                        >
+                        <Link href={`/coin/${coin.id}`} className="text-right">
                           <div className="font-medium">
                             ${coin.current_price.toLocaleString()}
                           </div>
@@ -166,9 +185,7 @@ export function CoinPrices({ assets }: { assets: string[] }) {
                                 : "text-red-600"
                             }`}
                           >
-                            {coin.price_change_percentage_24h >= 0
-                              ? "▲"
-                              : "▼"}{" "}
+                            {coin.price_change_percentage_24h >= 0 ? "▲" : "▼"}{" "}
                             {Math.abs(
                               coin.price_change_percentage_24h,
                             )?.toFixed(2)}
@@ -180,20 +197,20 @@ export function CoinPrices({ assets }: { assets: string[] }) {
                     </div>
                   );
                 }
-                // Fallback card — no price data available for this coin
+                // fallback card — no price data available for this coin
                 return (
                   <div
-                    key={p.assetId}
+                    key={placeholder.assetId}
                     className="flex items-center justify-between rounded-lg border p-3 opacity-60"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-bold">
-                        {p.symbol.slice(0, 2)}
+                        {placeholder.symbol.slice(0, 2)}
                       </div>
                       <div>
-                        <div className="font-medium">{p.name}</div>
+                        <div className="font-medium">{placeholder.name}</div>
                         <div className="text-sm text-muted-foreground uppercase">
-                          {p.symbol}
+                          {placeholder.symbol}
                         </div>
                       </div>
                     </div>

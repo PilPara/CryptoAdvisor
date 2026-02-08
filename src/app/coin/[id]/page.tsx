@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PriceChart } from "@/components/coin/price-chart";
@@ -22,12 +23,11 @@ interface CoinDetail {
   atl: number;
 }
 
-function formatNum(n: number | null | undefined): string {
-  if (n == null) return "N/A";
-  if (n >= 1_000_000_000)
-    return `$${(n / 1_000_000_000).toFixed(2)}B`;
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function formatNum(num: number | null | undefined): string {
+  if (num == null) return "N/A";
+  if (num >= 1_000_000_000) return `$${(num / 1_000_000_000).toFixed(2)}B`;
+  if (num >= 1_000_000) return `$${(num / 1_000_000).toFixed(2)}M`;
+  return `$${num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export default function CoinDetailPage() {
@@ -37,14 +37,12 @@ export default function CoinDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCoin = useCallback(() => {
-    setLoading(true);
-    setError(null);
+  const doFetchCoin = useCallback(() => {
     // Use the batch /markets endpoint — same one the dashboard uses.
-    // This is a single call that returns all the detail data we need,
-    // leaving the only other CoinGecko call to the chart history.
+    // This is a single call that returns all the detail data required.
+    // leaving the only other CoinGecko call to the chart history to ease on number of request since rate limit on free tier is really low
     fetch(`/api/prices/detail?coinId=${coinId}`)
-      .then((res) => res.json())
+      .then((response) => response.json())
       .then((data) => {
         if (data.error) {
           setError(data.error);
@@ -56,9 +54,15 @@ export default function CoinDetailPage() {
       .finally(() => setLoading(false));
   }, [coinId]);
 
+  const fetchCoin = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    doFetchCoin();
+  }, [doFetchCoin]);
+
   useEffect(() => {
-    fetchCoin();
-  }, [fetchCoin]);
+    doFetchCoin();
+  }, [doFetchCoin]);
 
   if (loading) {
     return (
@@ -71,9 +75,7 @@ export default function CoinDetailPage() {
   if (error || !coin) {
     return (
       <div className="mx-auto max-w-4xl py-8 space-y-4">
-        <p className="text-destructive">
-          {error || "Coin not found."}
-        </p>
+        <p className="text-destructive">{error || "Coin not found."}</p>
         <div className="flex gap-2">
           <Button variant="outline" onClick={fetchCoin}>
             Try again
@@ -114,10 +116,13 @@ export default function CoinDetailPage() {
       {/* Coin header */}
       <div className="flex items-center gap-4">
         {coin.image && (
-          <img
+          <Image
             src={coin.image}
             alt={coin.name}
-            className="h-12 w-12 rounded-full"
+            width={48}
+            height={48}
+            className="rounded-full"
+            unoptimized
           />
         )}
         <div>
@@ -136,8 +141,8 @@ export default function CoinDetailPage() {
                 pctChange >= 0 ? "text-green-600" : "text-red-600"
               }`}
             >
-              {pctChange >= 0 ? "▲" : "▼"}{" "}
-              {Math.abs(pctChange).toFixed(2)}% (24h)
+              {pctChange >= 0 ? "▲" : "▼"} {Math.abs(pctChange).toFixed(2)}%
+              (24h)
             </div>
           )}
         </div>

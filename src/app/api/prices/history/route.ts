@@ -34,15 +34,15 @@ export async function GET(request: Request) {
     try {
       if (attempt > 0) await new Promise((r) => setTimeout(r, 1500));
 
-      const res = await fetch(url, {
+      const response = await fetch(url, {
         next: { revalidate },
         headers: { "x-cg-demo-key": process.env.COINGECKO_API_KEY || "" },
       });
 
-      if (res.status === 429) continue; // rate-limited, retry
-      if (!res.ok) throw new Error(`CoinGecko error: ${res.status}`);
+      if (response.status === 429) continue; // rate-limited, retry
+      if (!response.ok) throw new Error(`CoinGecko error: ${response.status}`);
 
-      const data = await res.json();
+      const data = await response.json();
       return NextResponse.json({ prices: data.prices });
     } catch (err) {
       if (attempt === 2) {

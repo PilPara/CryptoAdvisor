@@ -34,7 +34,7 @@ export function AiInsight({ assets, investorType }: AiInsightProps) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ assets, investorType }),
     })
-      .then((res) => res.json())
+      .then((response) => response.json())
       .then((data) => setInsight(data.insight))
       .catch(() =>
         setInsight(

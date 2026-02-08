@@ -36,13 +36,13 @@ export function AddCoinButton({
     setOpen(false);
 
     try {
-      const res = await fetch("/api/preferences", {
+      const response = await fetch("/api/preferences", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ assets: newAssets }),
       });
 
-      if (!res.ok) {
+      if (!response.ok) {
         // Rollback on failure
         onAssetAdded(currentAssets);
       } else {

@@ -17,27 +17,24 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Invalid coinId" }, { status: 400 });
   }
 
-  // Use the batch /markets endpoint — much lighter on rate limits than /coins/{id}
+  // Use the batch/markets endpoint — much lighter on rate limits than /coins/{id}
   const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${encodeURIComponent(coinId)}`;
 
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       if (attempt > 0) await new Promise((r) => setTimeout(r, 1500));
 
-      const res = await fetch(url, {
+      const response = await fetch(url, {
         next: { revalidate: 60 },
         headers: { "x-cg-demo-key": process.env.COINGECKO_API_KEY || "" },
       });
 
-      if (res.status === 429) continue; // rate-limited, retry
-      if (!res.ok) throw new Error(`CoinGecko error: ${res.status}`);
+      if (response.status === 429) continue; // rate-limited, retry
+      if (!response.ok) throw new Error(`CoinGecko error: ${response.status}`);
 
-      const coins = await res.json();
+      const coins = await response.json();
       if (!Array.isArray(coins) || coins.length === 0) {
-        return NextResponse.json(
-          { error: "Coin not found" },
-          { status: 404 },
-        );
+        return NextResponse.json({ error: "Coin not found" }, { status: 404 });
       }
 
       const data = coins[0];
