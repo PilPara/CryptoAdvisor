@@ -18,11 +18,12 @@ export function VoteButtons({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setCurrentVote(null);
     fetch(`/api/vote?section=${section}`)
       .then((res) => res.json())
       .then((data) => {
         const vote = data.votes?.[contentId];
-        if (vote !== undefined) setCurrentVote(vote);
+        setCurrentVote(vote ?? null);
       })
       .catch(() => {});
   }, [section, contentId]);

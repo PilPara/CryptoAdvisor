@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -16,27 +16,55 @@ interface Meme {
   url: string;
 }
 
+function preloadImage(url: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => reject();
+    img.src = url;
+  });
+}
+
 export function CryptoMeme() {
   const [memes, setMemes] = useState<Meme[]>([]);
   const [meme, setMeme] = useState<Meme | null>(null);
+  const [loadingMeme, setLoadingMeme] = useState(false);
 
-  function pickRandom(list: Meme[]) {
-    const pool = list.length > 0 ? list : memes;
-    if (pool.length === 0) return;
-    const idx = Math.floor(Math.random() * pool.length);
-    setMeme(pool[idx]);
-  }
+  const pickRandom = useCallback(
+    async (list: Meme[]) => {
+      const pool = list.length > 0 ? list : memes;
+      if (pool.length === 0) return;
+
+      setLoadingMeme(true);
+      const idx = Math.floor(Math.random() * pool.length);
+      const next = pool[idx];
+
+      if (next.url) {
+        try {
+          await preloadImage(next.url);
+        } catch {
+          // image failed to load, still show the title
+        }
+      }
+
+      setMeme(next);
+      setLoadingMeme(false);
+    },
+    [memes],
+  );
 
   useEffect(() => {
     fetch("/api/meme")
       .then((res) => res.json())
       .then((data) => {
-        const all: Meme[] = data.memes || [];
+        const all: Meme[] = (data.memes || []).filter(
+          (m: Meme) => m.url,
+        );
         setMemes(all);
         pickRandom(all);
       })
       .catch(() => {});
-  }, []);
+  }, [pickRandom]);
 
   return (
     <Card>
@@ -45,7 +73,10 @@ export function CryptoMeme() {
         <CardDescription>Your daily dose of humor</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {meme && (
+        {loadingMeme && (
+          <p className="text-sm text-muted-foreground">Loading meme...</p>
+        )}
+        {!loadingMeme && meme && (
           <>
             <p className="font-medium">{meme.title}</p>
             {meme.url && (
@@ -58,10 +89,17 @@ export function CryptoMeme() {
           </>
         )}
         <div className="flex items-center justify-between">
-          <Button variant="outline" size="sm" onClick={() => pickRandom(memes)}>
-            Show another meme
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => pickRandom(memes)}
+            disabled={loadingMeme}
+          >
+            {loadingMeme ? "Loading..." : "Show another meme"}
           </Button>
-          {meme && <VoteButtons section="meme" contentId={meme.title} />}
+          {meme && !loadingMeme && (
+            <VoteButtons section="meme" contentId={meme.title} />
+          )}
         </div>
       </CardContent>
     </Card>
