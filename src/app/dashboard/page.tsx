@@ -35,6 +35,12 @@ export default async function DashboardPage() {
   if (prefs.length === 0) redirect("/onboarding");
 
   const userPrefs = prefs[0];
+  const ct = userPrefs.contentTypes;
+
+  const showPrices = ct.includes("prices");
+  const showNews = ct.includes("news");
+  const showInsight = ct.includes("social");
+  const showMeme = ct.includes("fun");
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 py-8">
@@ -45,20 +51,32 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {/* Top row: Coin prices determines the height, news matches it */}
-      <SyncedRow
-        left={<CoinPrices assets={userPrefs.assets} />}
-        right={<MarketNews assets={userPrefs.assets} />}
-      />
-
-      {/* Bottom row */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <AiInsight
-          assets={userPrefs.assets}
-          investorType={userPrefs.investorType}
+      {/* Top row: prices + news side by side, or single column */}
+      {showPrices && showNews && (
+        <SyncedRow
+          left={<CoinPrices assets={userPrefs.assets} />}
+          right={<MarketNews assets={userPrefs.assets} />}
         />
-        <CryptoMeme />
-      </div>
+      )}
+      {showPrices && !showNews && (
+        <CoinPrices assets={userPrefs.assets} />
+      )}
+      {!showPrices && showNews && (
+        <MarketNews assets={userPrefs.assets} />
+      )}
+
+      {/* Bottom row: insight + meme */}
+      {(showInsight || showMeme) && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {showInsight && (
+            <AiInsight
+              assets={userPrefs.assets}
+              investorType={userPrefs.investorType}
+            />
+          )}
+          {showMeme && <CryptoMeme />}
+        </div>
+      )}
     </div>
   );
 }
