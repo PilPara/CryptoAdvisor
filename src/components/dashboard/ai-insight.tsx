@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { VoteButtons } from "@/components/dashboard/vote-buttons";
 
 interface AiInsightProps {
@@ -15,11 +16,19 @@ interface AiInsightProps {
   investorType: string;
 }
 
+const TYPE_LABELS: Record<string, string> = {
+  hodler: "HODLer",
+  "day-trader": "Day Trader",
+  "nft-collector": "NFT Collector",
+  "defi-explorer": "DeFi Explorer",
+};
+
 export function AiInsight({ assets, investorType }: AiInsightProps) {
   const [insight, setInsight] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  function fetchInsight() {
+    setLoading(true);
     fetch("/api/insight", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -29,32 +38,57 @@ export function AiInsight({ assets, investorType }: AiInsightProps) {
       .then((data) => setInsight(data.insight))
       .catch(() =>
         setInsight(
-          "Markets are showing mixed signals today. Consider reviewing your portfolio allocation and staying updated with the latest developments in your tracked assets."
-        )
+          "Unable to generate insight right now. Please try again in a moment.",
+        ),
       )
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    fetchInsight();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assets, investorType]);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>AI Insight of the Day</CardTitle>
-        <CardDescription>
-          Personalized analysis based on your profile
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>AI Insight of the Day</CardTitle>
+            <CardDescription>
+              Personalized for{" "}
+              <span className="font-medium text-foreground">
+                {TYPE_LABELS[investorType] || investorType}
+              </span>{" "}
+              · Tracking {assets.join(", ")}
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         {loading ? (
-          <p className="text-sm text-muted-foreground">
-            Generating your insight...
-          </p>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Analyzing market data for your portfolio...
+            </p>
+          </div>
         ) : (
           <div className="space-y-3">
             <p className="leading-relaxed">{insight}</p>
-            <VoteButtons
-              section="insight"
-              contentId={new Date().toISOString().split("T")[0]}
-            />
+            <div className="flex items-center justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchInsight}
+                disabled={loading}
+              >
+                Refresh insight
+              </Button>
+              <VoteButtons
+                section="insight"
+                contentId={new Date().toISOString().split("T")[0]}
+              />
+            </div>
           </div>
         )}
       </CardContent>
